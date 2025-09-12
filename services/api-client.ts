@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { getToken } from '../utils/tokenStorage';
+import { API_BASE_URL } from '../constants/api-endpoints';
 
 export interface ApiError {
   message: string;
@@ -26,7 +27,7 @@ class ApiClient {
 
   constructor() {
     this.axiosInstance = axios.create({
-      baseURL: '',
+      baseURL: API_BASE_URL,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -43,6 +44,9 @@ class ApiClient {
           const token = await getToken('accessToken');
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('Token added to request:', token.substring(0, 20) + '...');
+          } else {
+            console.warn('No token found in storage for request:', config.url);
           }
         } catch (error) {
           console.error('Failed to get token from storage:', error);
@@ -61,6 +65,18 @@ class ApiClient {
       (error) => {
         if (error.response?.status === 401) {
           console.log('Unauthorized - token may be expired');
+        } else if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+          console.error('Network Error - Check your internet connection and API server status');
+          console.error('Request URL:', error.config?.url);
+          console.error('Base URL:', error.config?.baseURL);
+        } else {
+          console.error('API Error:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            url: error.config?.url,
+            method: error.config?.method,
+          });
         }
         return Promise.reject(error);
       }
