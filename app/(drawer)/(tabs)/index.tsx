@@ -19,13 +19,6 @@ export default function Dashboard() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View className="border-b border-gray-200 bg-white px-4 py-3">
-        <Text className="text-2xl font-bold text-gray-900">Dashboard</Text>
-        <Text className="text-sm text-gray-600">
-          Welcome back! Here&apos;s your learning overview
-        </Text>
-      </View>
-
       <DashboardView onCoursePress={handleCoursePress} onExamPress={handleExamPress} />
     </View>
   );

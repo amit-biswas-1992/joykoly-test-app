@@ -1,11 +1,48 @@
 import { coursesService } from './courses.service';
 import { examsService } from './exams.service';
 
+// Utility function to extract array data from API responses
+const extractArrayFromResponse = (response: any, arrayKey?: string): any[] => {
+  if (Array.isArray(response)) {
+    return response;
+  }
+  
+  if (response && typeof response === 'object') {
+    // Try common array keys
+    const possibleKeys = arrayKey ? [arrayKey] : ['data', 'exams', 'courses', 'results', 'items'];
+    
+    for (const key of possibleKeys) {
+      if (Array.isArray(response[key])) {
+        return response[key];
+      }
+      
+      // Check for nested data structure: response.data.data
+      if (response[key] && typeof response[key] === 'object' && Array.isArray(response[key][key])) {
+        return response[key][key];
+      }
+      
+      // Check for other nested patterns
+      if (response[key] && typeof response[key] === 'object') {
+        const nestedKeys = ['data', 'items', 'results', 'exams', 'courses'];
+        for (const nestedKey of nestedKeys) {
+          if (Array.isArray(response[key][nestedKey])) {
+            return response[key][nestedKey];
+          }
+        }
+      }
+    }
+  }
+  
+  console.warn('Could not extract array from response:', response);
+  return [];
+};
+
 export interface Course {
   id: string;
   title: string;
   description: string;
   thumbnail?: string;
+  imageUrl?: string;
   instructor: string;
   duration: number;
   level: string;
@@ -44,13 +81,12 @@ export interface DashboardData {
 
 export const getDashboardData = async (): Promise<DashboardData> => {
   try {
-    const [enrolledCourses, liveExams, upcomingExams, completedExams, practiceExams] =
+    const [enrolledCourses, liveExams, upcomingExams, completedExams] =
       await Promise.all([
         getEnrolledCourses(),
         getLiveExams(),
         getUpcomingExams(),
         getCompletedExams(),
-        getPracticeExams(),
       ]);
 
     return {
@@ -58,7 +94,7 @@ export const getDashboardData = async (): Promise<DashboardData> => {
       liveExams,
       upcomingExams,
       completedExams,
-      practiceExams,
+      practiceExams: [], // Practice exams endpoint not available in backend
     };
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
@@ -68,8 +104,8 @@ export const getDashboardData = async (): Promise<DashboardData> => {
 
 export const getEnrolledCourses = async (): Promise<Course[]> => {
   try {
-    const response = (await coursesService.getEnrolled()) as Course[];
-    return response || [];
+    const response = await coursesService.getEnrolled();
+    return extractArrayFromResponse(response, 'courses');
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
     return [];
@@ -78,10 +114,12 @@ export const getEnrolledCourses = async (): Promise<Course[]> => {
 
 export const getLiveExams = async (courseId?: string): Promise<Exam[]> => {
   try {
-    const response = (await examsService.getPublished()) as any[];
+    const response = await examsService.getPublished();
     const now = new Date();
 
-    return (response || [])
+    const exams = extractArrayFromResponse(response, 'exams');
+
+    return exams
       .filter((exam: any) => {
         const startTime = new Date(exam.startTime);
         const endTime = new Date(exam.endTime);
@@ -114,10 +152,12 @@ export const getLiveExams = async (courseId?: string): Promise<Exam[]> => {
 
 export const getUpcomingExams = async (limit = 5, courseId?: string): Promise<Exam[]> => {
   try {
-    const response = (await examsService.getPublished()) as any[];
+    const response = await examsService.getPublished();
     const now = new Date();
 
-    return (response || [])
+    const exams = extractArrayFromResponse(response, 'exams');
+
+    return exams
       .filter((exam: any) => {
         const startTime = new Date(exam.startTime);
         const isUpcoming = startTime > now;
@@ -151,10 +191,12 @@ export const getUpcomingExams = async (limit = 5, courseId?: string): Promise<Ex
 
 export const getCompletedExams = async (courseId?: string): Promise<Exam[]> => {
   try {
-    const response = (await examsService.getCompleted()) as any[];
+    const response = await examsService.getCompleted();
     const now = new Date();
 
-    return (response || [])
+    const exams = extractArrayFromResponse(response, 'exams');
+
+    return exams
       .filter((exam: any) => {
         const endTime = new Date(exam.endTime);
         const isCompleted = endTime < now;
@@ -185,29 +227,3 @@ export const getCompletedExams = async (courseId?: string): Promise<Exam[]> => {
   }
 };
 
-export const getPracticeExams = async (): Promise<Exam[]> => {
-  try {
-    const response = (await examsService.getPractice()) as any[];
-
-    return (response || []).map((exam: any) => ({
-      id: exam.id,
-      title: exam.title,
-      description: exam.description,
-      courseId: exam.courseId,
-      courseTitle: exam.course?.title || 'Unknown Course',
-      startTime: exam.startTime,
-      endTime: exam.endTime,
-      duration: exam.duration,
-      totalQuestions: exam.totalQuestions || 0,
-      totalMarks: exam.totalMarks || 0,
-      type: 'practice' as const,
-      status: 'upcoming' as const,
-      isEnrolled: exam.isEnrolled || false,
-      score: exam.score,
-      passed: exam.passed,
-    }));
-  } catch (error) {
-    console.error('Error fetching practice exams:', error);
-    return [];
-  }
-};

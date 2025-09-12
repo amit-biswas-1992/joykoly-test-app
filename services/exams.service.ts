@@ -68,7 +68,5 @@ export const examsService = {
 
   getMySubmissions: (id: string) => apiClient.fetch(API_ENDPOINTS.exams.mySubmissions(id)),
 
-  getPractice: () => apiClient.fetch(API_ENDPOINTS.exams.practice),
-
   getCompleted: () => apiClient.fetch(API_ENDPOINTS.exams.completed),
 };

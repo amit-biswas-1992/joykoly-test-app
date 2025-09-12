@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { getToken } from '../utils/tokenStorage';
-import { API_BASE_URL } from '../constants/api-endpoints';
+import { API_BASE_URL, API_TIMEOUT } from '../constants/config';
 
 export interface ApiError {
   message: string;
@@ -28,7 +28,7 @@ class ApiClient {
   constructor() {
     this.axiosInstance = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: API_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -41,7 +41,8 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         try {
-          const token = await getToken('accessToken');
+          //const token = await getToken('accessToken');
+          const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFtaXQuYmlzd2FzMTk5MjAyQGdtYWlsLmNvbSIsImlkIjoiNjY2Njk2N2QtMGQ1NC00Y2VkLWJhZDQtNjYyYThlMTEzNDkyIiwidXNlcm5hbWUiOiJhbWl0LmJpc3dhczE5OTIwMkBnbWFpbC5jb20iLCJyb2xlcyI6WyJTVFVERU5UIiwiQURNSU4iXSwicGVybWlzc2lvbnMiOlsiY291cnNlczp2aWV3IiwiY291cnNlczpjcmVhdGUiLCJjb3Vyc2VzOmVkaXQiLCJjb3Vyc2VzOmRlbGV0ZSIsImV4YW1zOnZpZXciLCJleGFtczpjcmVhdGUiLCJleGFtczplZGl0IiwiZXhhbXM6ZGVsZXRlIiwiZXhhbXM6ZXZhbHVhdGUiLCJxdWVzdGlvbnM6dmlldyIsInF1ZXN0aW9uczpjcmVhdGUiLCJxdWVzdGlvbnM6ZWRpdCIsInF1ZXN0aW9uczpkZWxldGUiLCJjbGFzc2VzOnZpZXciLCJjbGFzc2VzOmNyZWF0ZSIsImNsYXNzZXM6ZWRpdCIsImNsYXNzZXM6ZGVsZXRlIiwiYWNhZGVtaWM6dmlldyIsImFjYWRlbWljOmVkaXQiLCJhZG1pc3Npb246dmlldyIsImFkbWlzc2lvbjplZGl0IiwiYmxvZzp2aWV3IiwiYmxvZzpjcmVhdGUiLCJibG9nOmVkaXQiLCJibG9nOmRlbGV0ZSIsImVib29rczp2aWV3IiwiZWJvb2tzOmNyZWF0ZSIsImVib29rczplZGl0IiwiZWJvb2tzOmRlbGV0ZSIsInBheW1lbnRzOnZpZXciLCJwYXltZW50czplZGl0IiwicGF5bWVudHM6ZGVsZXRlIiwic3ViamVjdHM6dmlldyIsInN1YmplY3RzOmNyZWF0ZSIsInN1YmplY3RzOmVkaXQiLCJzdWJqZWN0czpkZWxldGUiLCJjaGFwdGVyczp2aWV3IiwiY2hhcHRlcnM6Y3JlYXRlIiwiY2hhcHRlcnM6ZWRpdCIsImNoYXB0ZXJzOmRlbGV0ZSIsInVzZXJzOnZpZXciLCJ1c2VyczpjcmVhdGUiLCJ1c2VyczplZGl0IiwidXNlcnM6ZGVsZXRlIiwicm9sZXM6dmlldyIsInJvbGVzOmNyZWF0ZSIsInJvbGVzOmVkaXQiLCJyb2xlczpkZWxldGUiLCJzeXN0ZW06c2V0dGluZ3MiLCJhbmFseXRpY3M6dmlldyJdLCJpYXQiOjE3NTU2Nzk5MjEsImV4cCI6MTc2MzQ1NTkyMX0.3-bod7NJ6Jx4_AqnGrqC_XDFaipkVzVKu4yVWx-BwR0';
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             console.log('Token added to request:', token.substring(0, 20) + '...');
@@ -69,6 +70,7 @@ class ApiClient {
           console.error('Network Error - Check your internet connection and API server status');
           console.error('Request URL:', error.config?.url);
           console.error('Base URL:', error.config?.baseURL);
+          console.error('Full URL:', `${error.config?.baseURL}${error.config?.url}`);
         } else {
           console.error('API Error:', {
             status: error.response?.status,
