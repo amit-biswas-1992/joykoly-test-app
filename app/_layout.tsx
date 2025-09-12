@@ -1,6 +1,7 @@
 import '../global.css';
 import 'expo-dev-client';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
+import { useEffect } from 'react';
 
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
@@ -14,6 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
+import { initializeStaticToken } from '~/utils/initializeToken';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -23,6 +25,11 @@ export {
 export default function RootLayout() {
   useInitialAndroidBarSync();
   const { colorScheme, isDarkColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    // Initialize static token on app startup
+    initializeStaticToken();
+  }, []);
 
   return (
     <>
