@@ -1,4 +1,5 @@
-import { apiClient } from './api-client';
+import { coursesService } from './courses.service';
+import { examsService } from './exams.service';
 
 export interface Course {
   id: string;
@@ -67,7 +68,7 @@ export const getDashboardData = async (): Promise<DashboardData> => {
 
 export const getEnrolledCourses = async (): Promise<Course[]> => {
   try {
-    const response = await apiClient.courses.getEnrolled();
+    const response = (await coursesService.getEnrolled()) as Course[];
     return response || [];
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
@@ -77,7 +78,7 @@ export const getEnrolledCourses = async (): Promise<Course[]> => {
 
 export const getLiveExams = async (courseId?: string): Promise<Exam[]> => {
   try {
-    const response = await apiClient.exams.getPublished();
+    const response = (await examsService.getPublished()) as any[];
     const now = new Date();
 
     return (response || [])
@@ -113,7 +114,7 @@ export const getLiveExams = async (courseId?: string): Promise<Exam[]> => {
 
 export const getUpcomingExams = async (limit = 5, courseId?: string): Promise<Exam[]> => {
   try {
-    const response = await apiClient.exams.getPublished();
+    const response = (await examsService.getPublished()) as any[];
     const now = new Date();
 
     return (response || [])
@@ -150,7 +151,7 @@ export const getUpcomingExams = async (limit = 5, courseId?: string): Promise<Ex
 
 export const getCompletedExams = async (courseId?: string): Promise<Exam[]> => {
   try {
-    const response = await apiClient.exams.getCompleted();
+    const response = (await examsService.getCompleted()) as any[];
     const now = new Date();
 
     return (response || [])
@@ -186,7 +187,7 @@ export const getCompletedExams = async (courseId?: string): Promise<Exam[]> => {
 
 export const getPracticeExams = async (): Promise<Exam[]> => {
   try {
-    const response = await apiClient.exams.getPractice();
+    const response = (await examsService.getPractice()) as any[];
 
     return (response || []).map((exam: any) => ({
       id: exam.id,

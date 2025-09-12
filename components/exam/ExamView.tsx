@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, Modal } from 'react-native';
 import { ExamQuestion, Question } from './ExamQuestion';
-import { apiClient } from '../../services/api-client';
+import { examsService } from '../../services/exams.service';
 
 interface ExamViewProps {
   examId: string;
@@ -35,7 +35,7 @@ export const ExamView: React.FC<ExamViewProps> = ({ examId, onComplete, onExit }
   const loadExamQuestions = async () => {
     try {
       setLoading(true);
-      const response = (await apiClient.exams.getQuestions(examId)) as any[];
+      const response = (await examsService.getQuestions(examId)) as any[];
 
       // Transform the response to match our Question interface
       const transformedQuestions: Question[] = response.map((q: any) => ({
@@ -104,7 +104,7 @@ export const ExamView: React.FC<ExamViewProps> = ({ examId, onComplete, onExit }
 
   const submitExam = async () => {
     try {
-      const response = await apiClient.exams.submit(examId, answers);
+      const response = await examsService.submit(examId, answers);
       onComplete(response);
     } catch (error) {
       console.error('Error submitting exam:', error);
