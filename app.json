@@ -33,12 +33,20 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.amitbiswas1992022.joykolytestapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.amitbiswas1992022.joykolytestapp"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "301986bc-36a0-45a0-919d-e770ddd036db"
       }
     }
   }

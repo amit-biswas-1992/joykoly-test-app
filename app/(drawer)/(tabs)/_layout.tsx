@@ -7,20 +7,40 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: 'black',
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#6B7280',
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Dashboard',
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="store"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Store',
+          tabBarIcon: ({ color }) => <TabBarIcon name="shopping-bag" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="library"
+        options={{
+          title: 'Library',
+          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
       />
     </Tabs>
