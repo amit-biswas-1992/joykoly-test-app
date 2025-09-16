@@ -327,6 +327,31 @@ git commit -m "message"        # Commit changes
 git push                       # Push to remote repository
 ```
 
+## Math Renderer Implementation
+
+### Overview
+Mobile app math rendering using `react-katex` for LaTeX expressions. Supports both inline (`$...$`) and block (`$$...$$`) math formatting.
+
+### Usage
+```tsx
+import { MathRenderer } from '@/components/ui/math-renderer'
+<MathRenderer content={questionText} className="text-gray-900" />
+```
+
+### Dependencies
+- `react-katex`: ^3.1.0
+- `@types/react-katex`: ^3.0.4
+
+### Files
+- `components/ui/math-renderer.tsx` - Main component
+- Used in exam submissions and results pages
+
+### Exam Submissions & Leaderboard
+- Added leaderboard and submissions buttons for completed exams
+- Created mobile-optimized submissions page with same logic as web results
+- Implemented leaderboard page with ranking system
+- Updated library page to show submission/leaderboard options
+
 ## Conclusion
 
 The Joykoly Test App has been successfully implemented with a comprehensive feature set including:

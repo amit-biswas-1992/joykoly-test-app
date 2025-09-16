@@ -163,12 +163,13 @@ export default function Library({ selectedCourse = 'all' }: LibraryProps) {
         ]
       );
     } else if (item.type === 'completed') {
-      // Show completed exam results
+      // Show completed exam options
       Alert.alert(
         item.title,
         `Course: ${item.course}\nScore: ${item.score}/${item.totalMarks}\nStatus: ${item.status}\nCompleted: ${new Date(item.lastAccessed || '').toLocaleDateString()}`,
         [
-          { text: 'View Results', onPress: () => router.push(`/(drawer)/(tabs)/exams/${item.id}/results` as any) },
+          { text: 'View Submissions', onPress: () => router.push(`/(drawer)/(tabs)/exams/${item.id}/submissions` as any) },
+          { text: 'View Leaderboard', onPress: () => router.push(`/(drawer)/(tabs)/exams/${item.id}/leaderboard` as any) },
           { text: 'Cancel', style: 'cancel' }
         ]
       );

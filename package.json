@@ -36,6 +36,7 @@
     "expo-constants": "~18.0.8",
     "expo-dev-client": "~6.0.12",
     "expo-dev-launcher": "^5.0.17",
+    "expo-linear-gradient": "~14.0.1",
     "expo-linking": "~8.0.8",
     "expo-navigation-bar": "~5.0.8",
     "expo-router": "~6.0.1",
@@ -56,12 +57,14 @@
     "react-native-uitextview": "2.0.0-rc.10",
     "react-native-web": "^0.21.0",
     "react-native-worklets-core": "^1.6.2",
+    "react-katex": "^3.1.0",
     "tailwind-merge": "^2.2.1",
     "zustand": "^4.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~19.1.10",
+    "@types/react-katex": "^3.0.4",
     "ajv": "^8.12.0",
     "eslint": "^9.25.1",
     "eslint-config-expo": "~10.0.0",
