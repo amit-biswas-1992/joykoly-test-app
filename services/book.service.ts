@@ -1,4 +1,5 @@
 import { apiClient } from './api-client';
+import { cacheService } from './cache.service';
 
 export interface Book {
   id: string;
@@ -147,18 +148,34 @@ const getMockBooks = (): Book[] => {
 
 export const bookService = {
   getAllBooks: async (): Promise<Book[]> => {
+    const cacheKey = 'all_books';
+    
+    // Check cache first
+    const cachedData = cacheService.get<Book[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+
     try {
       const response = await apiClient.fetch(API_ENDPOINTS.books.list);
       const books = Array.isArray(response) ? response : (response as any)?.data || [];
       
+      let result: Book[];
+      
       if (books.length === 0) {
-        return getMockBooks();
+        result = getMockBooks();
+      } else {
+        result = books.map(mapApiBookToBook);
       }
       
-      return books.map(mapApiBookToBook);
+      // Cache the result
+      cacheService.set(cacheKey, result);
+      return result;
     } catch (error) {
       console.error('Error fetching all books:', error);
-      return getMockBooks();
+      const result = getMockBooks();
+      cacheService.set(cacheKey, result);
+      return result;
     }
   },
 
@@ -180,12 +197,26 @@ export const bookService = {
   },
 
   getFeaturedBooks: async (): Promise<Book[]> => {
+    const cacheKey = 'featured_books';
+    
+    // Check cache first
+    const cachedData = cacheService.get<Book[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+
     try {
       const books = await bookService.getAllBooks();
-      return books.filter(book => book.isFeatured).slice(0, 3);
+      const result = books.filter(book => book.isFeatured).slice(0, 3);
+      
+      // Cache the result
+      cacheService.set(cacheKey, result);
+      return result;
     } catch (error) {
       console.error('Error fetching featured books:', error);
-      return getMockBooks().filter(book => book.isFeatured).slice(0, 3);
+      const result = getMockBooks().filter(book => book.isFeatured).slice(0, 3);
+      cacheService.set(cacheKey, result);
+      return result;
     }
   },
 

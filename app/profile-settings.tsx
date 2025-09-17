@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Alert, TextInput } from 'react-native';
+import { View, Text, ScrollView, Alert, TextInput, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons, AntDesign, Feather } from '@expo/vector-icons';
 import { ProfileData, ProfileUpdateData, Address } from '~/types/profile';
 import { userService } from '~/services/user.service';
 import { Button } from '~/components/nativewindui/Button';
 import { Container } from '~/components/Container';
 import { ProfileAvatar } from '~/components/profile/ProfileAvatar';
+import { ThemeToggle } from '~/components/ThemeToggle';
+import { useColorScheme } from '~/lib/useColorScheme';
+import { router } from 'expo-router';
 
 export default function ProfileSettings() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>('light');
 
   // Form states
   const [firstName, setFirstName] = useState('');
@@ -112,6 +117,15 @@ export default function ProfileSettings() {
         setBatch(data.batch || '');
         setGroup(data.group || '');
         setAddresses(data.addresses || []);
+        
+        // Load theme preference from profile
+        if (data.preferences?.theme) {
+          setThemePreference(data.preferences.theme);
+          // Only set the actual color scheme if it's not 'system'
+          if (data.preferences.theme !== 'system') {
+            setColorScheme(data.preferences.theme);
+          }
+        }
       } else {
         Alert.alert('ত্রুটি', result.error || 'প্রোফাইল লোড করতে সমস্যা হয়েছে');
       }
@@ -140,7 +154,11 @@ export default function ProfileSettings() {
         targetExam: targetExam.trim(),
         batch: batch.trim(),
         group: group.trim(),
-        addresses: addresses
+        addresses: addresses,
+        preferences: {
+          ...profile.preferences,
+          theme: themePreference
+        }
       };
       
       const result = await userService.updateProfile(updatedData);
@@ -208,6 +226,13 @@ export default function ProfileSettings() {
     Alert.alert('সফল', 'প্রাথমিক ঠিকানা সেট করা হয়েছে!');
   };
 
+  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    setThemePreference(theme);
+    if (theme !== 'system') {
+      setColorScheme(theme);
+    }
+  };
+
   const filteredDistricts = newAddress.division
     ? districts[newAddress.division as keyof typeof districts] || []
     : [];
@@ -230,7 +255,7 @@ export default function ProfileSettings() {
           <Button
             variant="secondary"
             size="icon"
-            onPress={() => {/* Navigate back */}}
+            onPress={() => router.back()}
           >
             <Ionicons name="arrow-back-outline" size={20} color="#6B7280" />
           </Button>
@@ -258,6 +283,7 @@ export default function ProfileSettings() {
               { id: 'personal', label: 'ব্যক্তিগত', icon: 'person-outline' },
               { id: 'academic', label: 'একাডেমিক', icon: 'school-outline' },
               { id: 'address', label: 'ঠিকানা', icon: 'home-outline' },
+              { id: 'theme', label: 'থিম', icon: 'color-palette-outline' as any },
             ].map((tab) => (
               <Button
                 key={tab.id}
@@ -533,6 +559,149 @@ export default function ProfileSettings() {
                 <Button onPress={addAddress}>
                   <Text className="text-white">ঠিকানা যোগ করুন</Text>
                 </Button>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Theme Settings Tab */}
+        {activeTab === 'theme' && (
+          <View className="space-y-6">
+            <View className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+              <Text className="text-lg font-semibold text-gray-900 dark:text-white mb-4">থিম সেটিংস</Text>
+              
+              <View className="space-y-6">
+                {/* Current Theme Display */}
+                <View className="flex-row items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-primary rounded-full items-center justify-center">
+                      <Ionicons 
+                        name={
+                          themePreference === 'dark' ? 'moon' : 
+                          themePreference === 'light' ? 'sunny' : 
+                          'phone-portrait'
+                        } 
+                        size={20} 
+                        color="white" 
+                      />
+                    </View>
+                    <View>
+                      <Text className="text-base font-medium text-gray-900 dark:text-white">
+                        {themePreference === 'dark' ? 'ডার্ক থিম' : 
+                         themePreference === 'light' ? 'লাইট থিম' : 
+                         'সিস্টেম থিম'}
+                      </Text>
+                      <Text className="text-sm text-gray-600 dark:text-gray-400">
+                        বর্তমানে সক্রিয় থিম
+                      </Text>
+                    </View>
+                  </View>
+                  <ThemeToggle />
+                </View>
+
+                {/* Theme Options */}
+                <View className="space-y-3">
+                  <Text className="text-base font-medium text-gray-900 dark:text-white mb-3">
+                    থিম নির্বাচন করুন
+                  </Text>
+                  
+                  {/* Light Theme Option */}
+                  <Pressable
+                    onPress={() => handleThemeChange('light')}
+                    className={`flex-row items-center justify-between p-4 rounded-lg border-2 ${
+                      themePreference === 'light' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    }`}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <View className="w-8 h-8 bg-yellow-400 rounded-full items-center justify-center">
+                        <Ionicons name="sunny" size={16} color="white" />
+                      </View>
+                      <View>
+                        <Text className="text-base font-medium text-gray-900 dark:text-white">
+                          লাইট থিম
+                        </Text>
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                          উজ্জ্বল এবং পরিষ্কার ইন্টারফেস
+                        </Text>
+                      </View>
+                    </View>
+                    {themePreference === 'light' && (
+                      <Ionicons name="checkmark-circle" size={20} color="#0F172A" />
+                    )}
+                  </Pressable>
+
+                  {/* Dark Theme Option */}
+                  <Pressable
+                    onPress={() => handleThemeChange('dark')}
+                    className={`flex-row items-center justify-between p-4 rounded-lg border-2 ${
+                      themePreference === 'dark' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    }`}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <View className="w-8 h-8 bg-indigo-600 rounded-full items-center justify-center">
+                        <Ionicons name="moon" size={16} color="white" />
+                      </View>
+                      <View>
+                        <Text className="text-base font-medium text-gray-900 dark:text-white">
+                          ডার্ক থিম
+                        </Text>
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                          চোখের জন্য আরামদায়ক এবং শক্তি সাশ্রয়ী
+                        </Text>
+                      </View>
+                    </View>
+                    {themePreference === 'dark' && (
+                      <Ionicons name="checkmark-circle" size={20} color="#0F172A" />
+                    )}
+                  </Pressable>
+
+                  {/* System Theme Option */}
+                  <Pressable
+                    onPress={() => handleThemeChange('system')}
+                    className={`flex-row items-center justify-between p-4 rounded-lg border-2 ${
+                      themePreference === 'system' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    }`}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <View className="w-8 h-8 bg-gray-600 rounded-full items-center justify-center">
+                        <Ionicons name="phone-portrait" size={16} color="white" />
+                      </View>
+                      <View>
+                        <Text className="text-base font-medium text-gray-900 dark:text-white">
+                          সিস্টেম থিম
+                        </Text>
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                          ডিভাইসের সেটিংস অনুযায়ী থিম পরিবর্তন
+                        </Text>
+                      </View>
+                    </View>
+                    {themePreference === 'system' && (
+                      <Ionicons name="checkmark-circle" size={20} color="#0F172A" />
+                    )}
+                  </Pressable>
+                </View>
+
+                {/* Theme Information */}
+                <View className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                  <View className="flex-row items-start gap-3">
+                    <Ionicons name="information-circle" size={20} color="#3B82F6" />
+                    <View className="flex-1">
+                      <Text className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                        থিম সম্পর্কে
+                      </Text>
+                      <Text className="text-sm text-blue-800 dark:text-blue-200">
+                        আপনার পছন্দের থিম নির্বাচন করুন। ডার্ক থিম চোখের জন্য আরামদায়ক এবং ব্যাটারি সাশ্রয়ী, 
+                        অন্যদিকে লাইট থিম উজ্জ্বল এবং পরিষ্কার ইন্টারফেস প্রদান করে।
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               </View>
             </View>
           </View>

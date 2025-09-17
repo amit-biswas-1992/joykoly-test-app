@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MathRenderer } from '@/components/ui/math-renderer';
+import { examsService } from '@/services/exams.service';
 
 interface Question {
   id: string;
@@ -109,35 +110,68 @@ export default function ExamSubmissionsPage() {
       setLoading(true);
       setError(null);
       
-      // Mock API calls - replace with actual API calls
-      const examResponse = await fetch(`/api/v1/exams/${id}`);
-      const questionsResponse = await fetch(`/api/v1/exams/${id}/questions`);
-      const resultsResponse = await fetch(`/api/v1/exams/${id}/results`);
-      const participationResponse = await fetch(`/api/v1/exams/${id}/participation`);
-
-      if (!examResponse.ok) {
-        throw new Error('Exam not found');
-      }
-
-      const examData = await examResponse.json();
-      const questionsData = await questionsResponse.json();
-      const resultsData = await resultsResponse.json();
-      const participationData = await participationResponse.json();
+      // Use proper service methods - match website implementation
+      const [examData, questionsData, resultsData, participationData] = await Promise.all([
+        examsService.getExam(id),
+        examsService.getQuestions(id),
+        examsService.getResults(id),
+        examsService.getParticipation(id).catch(() => null) // Handle case where user hasn't participated
+      ]);
 
       // Process the data similar to the web version
+      let participation = null;
+      let userAnswers: QuestionAnswer[] = [];
+      
+      if (participationData) {
+        const { participation: participationInfo, answers = [] } = participationData as any;
+        participation = participationInfo;
+        
+        // Map answers to include full question data
+        const questionsList = (questionsData as any)?.questions || questionsData || [];
+        userAnswers = answers.map((answer: any) => ({
+          ...answer,
+          question: questionsList.find((q: any) => q.id === answer.questionId) || null
+        }));
+        
+        // Ensure we have all required fields with defaults
+        participation = {
+          ...participation,
+          score: participation?.score || 0,
+          totalQuestions: participation?.totalQuestions || questionsList.length,
+          correctAnswers: participation?.correctAnswers || 0,
+          wrongAnswers: participation?.wrongAnswers || 0,
+          timeTaken: participation?.timeTaken || 0,
+          isCompleted: participation?.isCompleted || false,
+          isPassed: participation?.isPassed || false,
+          status: participation?.status || 'UNKNOWN'
+        };
+      }
+
       const resultData: ExamResult = {
-        exam: examData.data || examData,
-        participation: participationData.participation || null,
-        answers: participationData.answers || [],
-        questions: questionsData.questions || questionsData || [],
-        leaderboard: resultsData.data || [],
-        totalParticipants: resultsData.data?.length || 0
+        exam: (examData as any)?.data || examData,
+        participation: participation,
+        answers: userAnswers,
+        questions: (questionsData as any)?.questions || questionsData || [],
+        leaderboard: (resultsData as any)?.data || [],
+        totalParticipants: (resultsData as any)?.data?.length || 0
       };
 
       setResult(resultData);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching exam result:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load exam results');
+      
+      // Handle specific error cases
+      if (err?.response?.status === 404) {
+        setError('Exam not found');
+      } else if (err?.response?.status === 403) {
+        setError('You do not have permission to view this exam');
+      } else if (err?.response?.status === 401) {
+        setError('Please log in to view your exam results');
+      } else if (err?.code === 'NETWORK_ERROR' || err?.message?.includes('Network Error')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(err?.message || 'Failed to load exam results');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -157,9 +191,26 @@ export default function ExamSubmissionsPage() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-600 mt-4">Loading exam submissions...</Text>
+      <View className="flex-1 bg-gray-50">
+        {/* Header Skeleton */}
+        <LinearGradient
+          colors={['#3B82F6', '#1D4ED8']}
+          className="px-6 pt-12 pb-6"
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="w-8 h-8 bg-white/20 rounded" />
+            <View className="flex-1 items-center mr-8">
+              <View className="w-32 h-6 bg-white/20 rounded mb-2" />
+              <View className="w-24 h-4 bg-white/20 rounded" />
+            </View>
+          </View>
+        </LinearGradient>
+        
+        {/* Content Skeleton */}
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text className="text-gray-600 mt-4 text-center">Loading exam submissions...</Text>
+        </View>
       </View>
     );
   }
@@ -197,6 +248,7 @@ export default function ExamSubmissionsPage() {
   const scorePercentage = hasParticipated && exam.totalMarks > 0 && participation.score ? 
     (participation.score / exam.totalMarks) * 100 : 0;
 
+
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
@@ -232,13 +284,40 @@ export default function ExamSubmissionsPage() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* No Submission Warning Banner */}
+        {!hasParticipated && (
+          <View className="mx-4 mt-4 mb-4">
+            <View className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm">
+              <View className="flex-row items-start">
+                <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center mr-3 flex-shrink-0">
+                  <Ionicons name="warning" size={20} color="#F59E0B" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-amber-800 font-semibold text-base mb-1">
+                    No Submissions Found
+                  </Text>
+                  <Text className="text-amber-700 text-sm leading-5 mb-3">
+                    You haven't participated in this exam yet. The questions and solutions below are for reference only.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push(`/exams/${id}` as any)}
+                    className="bg-amber-600 px-4 py-2 rounded-lg self-start"
+                  >
+                    <Text className="text-white font-semibold text-sm">Take Exam</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* Performance Summary */}
         {participation && (
           <View className="mx-4 mt-4 mb-6">
-            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <View className="items-center mb-6">
+            <View className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
+              <View className="items-center mb-4 sm:mb-6">
                 {/* Circular Progress */}
-                <View className="relative w-24 h-24 mb-4">
+                <View className="relative w-20 h-20 sm:w-24 sm:h-24 mb-3 sm:mb-4">
                   <View className="absolute inset-0 rounded-full border-4 border-gray-200" />
                   <View 
                     className="absolute inset-0 rounded-full border-4 border-green-500"
@@ -249,66 +328,66 @@ export default function ExamSubmissionsPage() {
                     }}
                   />
                   <View className="absolute inset-0 items-center justify-center">
-                    <Text className="text-2xl font-bold text-gray-900">
+                    <Text className="text-lg sm:text-2xl font-bold text-gray-900">
                       {scorePercentage.toFixed(0)}%
                     </Text>
                     <Text className="text-xs text-gray-500">Score</Text>
                   </View>
                 </View>
                 
-                <Text className="text-2xl font-bold text-gray-900">
+                <Text className="text-lg sm:text-2xl font-bold text-gray-900">
                   {participation.score} / {exam.totalMarks}
                 </Text>
-                <Text className="text-sm text-gray-500">Total Marks</Text>
+                <Text className="text-xs sm:text-sm text-gray-500">Total Marks</Text>
               </View>
 
               {/* Stats Grid */}
-              <View className="flex-row justify-around mb-6">
-                <View className="items-center">
-                  <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center mb-2">
-                    <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+              <View className="flex-row justify-around mb-4 sm:mb-6">
+                <View className="items-center flex-1">
+                  <View className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full items-center justify-center mb-2">
+                    <Ionicons name="checkmark-circle" size={20} color="#10B981" />
                   </View>
-                  <Text className="text-lg font-bold text-gray-900">{correctAnswers}</Text>
-                  <Text className="text-xs text-gray-500">Correct</Text>
+                  <Text className="text-base sm:text-lg font-bold text-gray-900">{correctAnswers}</Text>
+                  <Text className="text-xs text-gray-500 text-center">Correct</Text>
                 </View>
                 
-                <View className="items-center">
-                  <View className="w-12 h-12 bg-red-100 rounded-full items-center justify-center mb-2">
-                    <Ionicons name="close-circle" size={24} color="#EF4444" />
+                <View className="items-center flex-1">
+                  <View className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full items-center justify-center mb-2">
+                    <Ionicons name="close-circle" size={20} color="#EF4444" />
                   </View>
-                  <Text className="text-lg font-bold text-gray-900">{wrongAnswers}</Text>
-                  <Text className="text-xs text-gray-500">Wrong</Text>
+                  <Text className="text-base sm:text-lg font-bold text-gray-900">{wrongAnswers}</Text>
+                  <Text className="text-xs text-gray-500 text-center">Wrong</Text>
                 </View>
                 
-                <View className="items-center">
-                  <View className="w-12 h-12 bg-yellow-100 rounded-full items-center justify-center mb-2">
-                    <Ionicons name="ellipsis-horizontal" size={24} color="#F59E0B" />
+                <View className="items-center flex-1">
+                  <View className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-full items-center justify-center mb-2">
+                    <Ionicons name="ellipsis-horizontal" size={20} color="#F59E0B" />
                   </View>
-                  <Text className="text-lg font-bold text-gray-900">{skippedAnswers}</Text>
-                  <Text className="text-xs text-gray-500">Skipped</Text>
+                  <Text className="text-base sm:text-lg font-bold text-gray-900">{skippedAnswers}</Text>
+                  <Text className="text-xs text-gray-500 text-center">Skipped</Text>
                 </View>
               </View>
 
               {/* Additional Info */}
               <View className="flex-row justify-around">
-                <View className="items-center">
-                  <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center mb-2">
-                    <Ionicons name="trophy" size={24} color="#3B82F6" />
+                <View className="items-center flex-1">
+                  <View className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full items-center justify-center mb-2">
+                    <Ionicons name="trophy" size={20} color="#3B82F6" />
                   </View>
-                  <Text className="text-lg font-bold text-gray-900">
+                  <Text className="text-base sm:text-lg font-bold text-gray-900">
                     {participation.rank || 'N/A'}
                   </Text>
-                  <Text className="text-xs text-gray-500">Rank</Text>
+                  <Text className="text-xs text-gray-500 text-center">Rank</Text>
                 </View>
                 
-                <View className="items-center">
-                  <View className="w-12 h-12 bg-purple-100 rounded-full items-center justify-center mb-2">
-                    <Ionicons name="people" size={24} color="#8B5CF6" />
+                <View className="items-center flex-1">
+                  <View className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full items-center justify-center mb-2">
+                    <Ionicons name="people" size={20} color="#8B5CF6" />
                   </View>
-                  <Text className="text-lg font-bold text-gray-900">
+                  <Text className="text-base sm:text-lg font-bold text-gray-900">
                     {result.totalParticipants || 'N/A'}
                   </Text>
-                  <Text className="text-xs text-gray-500">Participants</Text>
+                  <Text className="text-xs text-gray-500 text-center">Participants</Text>
                 </View>
               </View>
             </View>
@@ -318,38 +397,53 @@ export default function ExamSubmissionsPage() {
         {/* Questions Section */}
         <View className="mx-4 mb-6">
           <View className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <View className="px-6 py-4 border-b border-gray-100">
-              <Text className="text-lg font-bold text-gray-900">Questions & Answers</Text>
+            <View className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+              <Text className="text-base sm:text-lg font-bold text-gray-900">
+                {hasParticipated ? 'Questions & Answers' : 'Questions & Solutions (Reference)'}
+              </Text>
+              {!hasParticipated && (
+                <Text className="text-xs text-gray-500 mt-1">
+                  Showing correct answers and explanations for reference
+                </Text>
+              )}
             </View>
             
-            <View className="p-6">
+            <View className="p-4 sm:p-6">
               {questions.map((question, index) => {
                 const answer = answers.find(a => a.questionId === question.id);
                 const isCorrect = answer?.isCorrect;
                 const isSkipped = !answer?.selectedOptions?.length && !answer?.textAnswer;
                 
+                // For non-participants, show all questions as reference
+                const showAsReference = !hasParticipated;
+                
                 return (
-                  <View key={question.id} className="mb-6 last:mb-0">
-                    <View className="bg-gray-50 rounded-xl p-4">
+                  <View key={question.id} className="mb-4 sm:mb-6 last:mb-0">
+                    <View className="bg-gray-50 rounded-xl p-3 sm:p-4">
                       {/* Question Header */}
-                      <View className="flex-row items-start mb-4">
-                        <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${
+                      <View className="flex-row items-start mb-3 sm:mb-4">
+                        <View className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full items-center justify-center mr-3 ${
+                          showAsReference ? 'bg-blue-100' :
                           isCorrect ? 'bg-green-100' : 
                           isSkipped ? 'bg-gray-200' : 
                           'bg-red-100'
                         }`}>
                           <Ionicons 
-                            name={isCorrect ? 'checkmark' : isSkipped ? 'ellipsis-horizontal' : 'close'} 
-                            size={16} 
-                            color={isCorrect ? '#10B981' : isSkipped ? '#6B7280' : '#EF4444'} 
+                            name={showAsReference ? 'book' : 
+                                  isCorrect ? 'checkmark' : 
+                                  isSkipped ? 'ellipsis-horizontal' : 'close'} 
+                            size={14} 
+                            color={showAsReference ? '#3B82F6' :
+                                   isCorrect ? '#10B981' : 
+                                   isSkipped ? '#6B7280' : '#EF4444'} 
                           />
                         </View>
                         
-                        <View className="flex-1">
-                          <Text className="text-sm font-medium text-gray-900 mb-2">
+                        <View className="flex-1 min-w-0">
+                          <Text className="text-xs sm:text-sm font-medium text-gray-900 mb-2">
                             Question {index + 1} ({question.marks} {question.marks === 1 ? 'mark' : 'marks'})
                           </Text>
-                          <View className="mb-3">
+                          <View className="mb-2 sm:mb-3">
                             <MathRenderer content={question.question} className="text-gray-900" />
                           </View>
                         </View>
@@ -367,27 +461,34 @@ export default function ExamSubmissionsPage() {
                             return (
                               <View 
                                 key={i}
-                                className={`p-3 rounded-lg border ${
+                                className={`p-2 sm:p-3 rounded-lg border ${
+                                  showAsReference && isCorrectOption ? 'border-green-500 bg-green-50' :
                                   isCorrectOption ? 'border-green-500 bg-green-50' :
                                   (isSelected && !isCorrectOption) ? 'border-red-500 bg-red-50' :
                                   'border-gray-200 bg-white'
                                 }`}
                               >
                                 <View className="flex-row items-center">
-                                  <View className={`w-6 h-6 rounded-full border items-center justify-center mr-3 ${
+                                  <View className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border items-center justify-center mr-2 sm:mr-3 ${
+                                    showAsReference && isCorrectOption ? 'border-green-500 bg-green-500' :
                                     isSelected && isCorrectOption ? 'border-green-500 bg-green-500' :
                                     isSelected ? 'border-red-500 bg-red-500' :
                                     isCorrectOption ? 'border-green-500 bg-green-500' :
                                     'border-gray-300'
                                   }`}>
                                     {isCorrectOption ? (
-                                      <Ionicons name="checkmark" size={12} color="white" />
+                                      <Ionicons name="checkmark" size={10} color="white" />
                                     ) : isSelected ? (
-                                      <Ionicons name="close" size={12} color="white" />
+                                      <Ionicons name="close" size={10} color="white" />
                                     ) : null}
                                   </View>
-                                  <View className="flex-1">
+                                  <View className="flex-1 min-w-0">
                                     <MathRenderer content={option} className="text-gray-900" />
+                                    {showAsReference && isCorrectOption && (
+                                      <Text className="text-xs text-green-600 mt-1 font-medium">
+                                        ✓ Correct Answer
+                                      </Text>
+                                    )}
                                   </View>
                                 </View>
                               </View>
@@ -398,11 +499,11 @@ export default function ExamSubmissionsPage() {
 
                       {/* Text Answer */}
                       {!question.options?.length && (
-                        <View className="space-y-3">
-                          {answer?.textAnswer && (
+                        <View className="space-y-2 sm:space-y-3">
+                          {answer?.textAnswer && !showAsReference && (
                             <View>
-                              <Text className="text-sm font-medium text-gray-700 mb-2">Your Answer:</Text>
-                              <View className={`p-3 rounded-lg border ${
+                              <Text className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Your Answer:</Text>
+                              <View className={`p-2 sm:p-3 rounded-lg border ${
                                 isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
                               }`}>
                                 <MathRenderer content={answer.textAnswer} className="text-gray-900" />
@@ -412,17 +513,24 @@ export default function ExamSubmissionsPage() {
                           
                           {question.correctAnswer && typeof question.correctAnswer === 'string' && (
                             <View>
-                              <Text className="text-sm font-medium text-gray-700 mb-2">Correct Answer:</Text>
-                              <View className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <Text className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                                {showAsReference ? 'Correct Answer:' : 'Correct Answer:'}
+                              </Text>
+                              <View className="p-2 sm:p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <MathRenderer content={question.correctAnswer} className="text-green-800" />
+                                {showAsReference && (
+                                  <Text className="text-xs text-green-600 mt-2 font-medium">
+                                    ✓ This is the correct answer
+                                  </Text>
+                                )}
                               </View>
                             </View>
                           )}
                           
                           {answer?.feedback && (
                             <View>
-                              <Text className="text-sm font-medium text-gray-700 mb-2">Feedback:</Text>
-                              <View className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                              <Text className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Feedback:</Text>
+                              <View className="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-100">
                                 <MathRenderer content={answer.feedback} className="text-blue-800" />
                               </View>
                             </View>
@@ -430,12 +538,12 @@ export default function ExamSubmissionsPage() {
                           
                           {answer?.score !== undefined && (
                             <View>
-                              <Text className="text-sm font-medium text-gray-700 mb-2">Score:</Text>
+                              <Text className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Score:</Text>
                               <View className="flex-row items-center">
-                                <Text className="text-lg font-medium text-gray-900">
+                                <Text className="text-base sm:text-lg font-medium text-gray-900">
                                   {answer.score} / {answer.maxScore || question.marks}
                                 </Text>
-                                <Text className="text-sm text-gray-500 ml-2">
+                                <Text className="text-xs sm:text-sm text-gray-500 ml-2">
                                   ({(answer.score / (answer.maxScore || question.marks) * 100).toFixed(1)}%)
                                 </Text>
                               </View>
@@ -446,9 +554,16 @@ export default function ExamSubmissionsPage() {
 
                       {/* Explanation */}
                       {question.explanation && (
-                        <View className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                          <Text className="text-sm font-medium text-blue-800 mb-2">Explanation:</Text>
+                        <View className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-100">
+                          <Text className="text-xs sm:text-sm font-medium text-blue-800 mb-1 sm:mb-2">
+                            {showAsReference ? 'Explanation (Reference):' : 'Explanation:'}
+                          </Text>
                           <MathRenderer content={question.explanation} className="text-blue-700" />
+                          {showAsReference && (
+                            <Text className="text-xs text-blue-600 mt-2 font-medium">
+                              📚 This explanation helps you understand the concept
+                            </Text>
+                          )}
                         </View>
                       )}
                     </View>

@@ -45,8 +45,16 @@ export default function RootLayout() {
           <ActionSheetProvider>
             <NavThemeProvider value={NAV_THEME[colorScheme]}>
               <Stack screenOptions={SCREEN_OPTIONS}>
-                <Stack.Screen name="(drawer)" options={DRAWER_OPTIONS} />
+                <Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
                 <Stack.Screen name="modal" options={MODAL_OPTIONS} />
+                <Stack.Screen name="course/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="courses" options={{ headerShown: false }} />
+                <Stack.Screen name="exam/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="exams" options={{ headerShown: false }} />
+                <Stack.Screen name="exams/[id]/leaderboard" options={{ headerShown: false }} />
+                <Stack.Screen name="exams/[id]/submissions" options={{ headerShown: false }} />
+                <Stack.Screen name="profile" options={{ headerShown: false }} />
+                <Stack.Screen name="profile-settings" options={{ headerShown: false }} />
               </Stack>
             </NavThemeProvider>
           </ActionSheetProvider>
@@ -62,7 +70,7 @@ const SCREEN_OPTIONS = {
   animation: 'ios_from_right', // for android
 } as const;
 
-const DRAWER_OPTIONS = {
+const TABS_OPTIONS = {
   headerShown: false,
 } as const;
 

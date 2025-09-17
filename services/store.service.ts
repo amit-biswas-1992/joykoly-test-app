@@ -1,5 +1,6 @@
 import { apiClient } from './api-client';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
+import { cacheService } from './cache.service';
 
 export interface StoreCourse {
   id: string;
@@ -163,38 +164,70 @@ const mapApiCourseToStoreCourse = (apiCourse: any): StoreCourse => {
 
 export const storeService = {
   getFeaturedCourses: async (): Promise<StoreCourse[]> => {
+    const cacheKey = 'featured_courses';
+    
+    // Check cache first
+    const cachedData = cacheService.get<StoreCourse[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+
     try {
       // For now, get all courses and mark first 3 as featured
       const response = await apiClient.fetch(API_ENDPOINTS.courses.list);
       const courses = Array.isArray(response) ? response : (response as any)?.data || [];
       
+      let result: StoreCourse[];
+      
       if (courses.length === 0) {
-        return getMockCourses().slice(0, 3).map(course => ({ ...course, isFeatured: true }));
+        result = getMockCourses().slice(0, 3).map(course => ({ ...course, isFeatured: true }));
+      } else {
+        result = courses.slice(0, 3).map((course: any) => ({
+          ...mapApiCourseToStoreCourse(course),
+          isFeatured: true
+        }));
       }
       
-      return courses.slice(0, 3).map((course: any) => ({
-        ...mapApiCourseToStoreCourse(course),
-        isFeatured: true
-      }));
+      // Cache the result
+      cacheService.set(cacheKey, result);
+      return result;
     } catch (error) {
       console.error('Error fetching featured courses:', error);
-      return getMockCourses().slice(0, 3).map(course => ({ ...course, isFeatured: true }));
+      const result = getMockCourses().slice(0, 3).map(course => ({ ...course, isFeatured: true }));
+      cacheService.set(cacheKey, result);
+      return result;
     }
   },
 
   getAllCourses: async (): Promise<StoreCourse[]> => {
+    const cacheKey = 'all_courses';
+    
+    // Check cache first
+    const cachedData = cacheService.get<StoreCourse[]>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+
     try {
       const response = await apiClient.fetch(API_ENDPOINTS.courses.list);
       const courses = Array.isArray(response) ? response : (response as any)?.data || [];
       
+      let result: StoreCourse[];
+      
       if (courses.length === 0) {
-        return getMockCourses();
+        result = getMockCourses();
+      } else {
+        result = courses.map(mapApiCourseToStoreCourse);
       }
       
-      return courses.map(mapApiCourseToStoreCourse);
+      // Cache the result
+      cacheService.set(cacheKey, result);
+      return result;
     } catch (error) {
       console.error('Error fetching all courses:', error);
-      return getMockCourses();
+      const result = getMockCourses();
+      cacheService.set(cacheKey, result);
+      return result;
     }
   },
 

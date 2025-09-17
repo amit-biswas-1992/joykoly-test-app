@@ -31,6 +31,24 @@ const extractArrayFromResponse = (response: any, arrayKey?: string): any[] => {
         }
       }
     }
+    
+    // Special handling for the specific API response structure we're seeing
+    // response.data.data pattern
+    if (response.data && response.data.data && Array.isArray(response.data.data)) {
+      console.log('Found data in response.data.data structure');
+      return response.data.data;
+    }
+    
+    // response.data pattern with nested data
+    if (response.data && typeof response.data === 'object') {
+      const nestedKeys = ['data', 'items', 'results', 'exams', 'courses'];
+      for (const nestedKey of nestedKeys) {
+        if (Array.isArray(response.data[nestedKey])) {
+          console.log(`Found data in response.data.${nestedKey} structure`);
+          return response.data[nestedKey];
+        }
+      }
+    }
   }
   
   console.warn('Could not extract array from response:', response);
@@ -115,9 +133,11 @@ export const getEnrolledCourses = async (): Promise<Course[]> => {
 export const getLiveExams = async (courseId?: string): Promise<Exam[]> => {
   try {
     const response = await examsService.getPublished();
+    console.log('Raw response from getPublished:', JSON.stringify(response, null, 2));
     const now = new Date();
 
     const exams = extractArrayFromResponse(response, 'exams');
+    console.log('Extracted exams from getPublished:', exams);
 
     return exams
       .filter((exam: any) => {
@@ -192,9 +212,11 @@ export const getUpcomingExams = async (limit = 5, courseId?: string): Promise<Ex
 export const getCompletedExams = async (courseId?: string): Promise<Exam[]> => {
   try {
     const response = await examsService.getCompleted();
+    console.log('Raw response from getCompleted:', JSON.stringify(response, null, 2));
     const now = new Date();
 
     const exams = extractArrayFromResponse(response, 'exams');
+    console.log('Extracted exams from getCompleted:', exams);
 
     return exams
       .filter((exam: any) => {

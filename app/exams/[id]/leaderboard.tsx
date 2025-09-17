@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { examsService } from '@/services/exams.service';
 
 interface LeaderboardEntry {
   id: string;
@@ -53,22 +54,33 @@ export default function ExamLeaderboardPage() {
       setLoading(true);
       setError(null);
       
-      // Mock API calls - replace with actual API calls
-      const examResponse = await fetch(`/api/v1/exams/${id}`);
-      const leaderboardResponse = await fetch(`/api/v1/exams/${id}/leaderboard`);
+      // Use proper service methods
+      const [examData, leaderboardData] = await Promise.all([
+        examsService.getExam(id),
+        examsService.getLeaderboard(id)
+      ]);
 
-      if (!examResponse.ok) {
-        throw new Error('Exam not found');
-      }
+      // Handle different response structures
+      const exam = (examData as any)?.data || examData;
+      const leaderboard = Array.isArray(leaderboardData) 
+        ? leaderboardData 
+        : (leaderboardData as any)?.data || [];
 
-      const examData = await examResponse.json();
-      const leaderboardData = await leaderboardResponse.json();
-
-      setExam(examData.data || examData);
-      setLeaderboard(leaderboardData.data || leaderboardData || []);
-    } catch (err) {
+      setExam(exam);
+      setLeaderboard(leaderboard);
+    } catch (err: any) {
       console.error('Error fetching leaderboard:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load leaderboard');
+      
+      // Handle specific error cases
+      if (err?.response?.status === 404) {
+        setError('Exam not found');
+      } else if (err?.response?.status === 403) {
+        setError('You do not have permission to view this leaderboard');
+      } else if (err?.code === 'NETWORK_ERROR' || err?.message?.includes('Network Error')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(err?.message || 'Failed to load leaderboard');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -102,11 +114,11 @@ export default function ExamLeaderboardPage() {
   const getRankBackground = (rank: number) => {
     switch (rank) {
       case 1:
-        return 'bg-gradient-to-r from-yellow-100 to-yellow-200';
+        return 'bg-yellow-100';
       case 2:
-        return 'bg-gradient-to-r from-gray-100 to-gray-200';
+        return 'bg-gray-100';
       case 3:
-        return 'bg-gradient-to-r from-orange-100 to-orange-200';
+        return 'bg-orange-100';
       default:
         return 'bg-white';
     }
@@ -114,9 +126,26 @@ export default function ExamLeaderboardPage() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-gray-50 items-center justify-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-600 mt-4">Loading leaderboard...</Text>
+      <View className="flex-1 bg-gray-50">
+        {/* Header Skeleton */}
+        <LinearGradient
+          colors={['#3B82F6', '#1D4ED8']}
+          style={{ paddingHorizontal: 24, paddingTop: 48, paddingBottom: 24 }}
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="w-8 h-8 bg-white rounded opacity-20" />
+            <View className="flex-1 items-center mr-8">
+              <View className="w-32 h-6 bg-white rounded mb-2 opacity-20" />
+              <View className="w-24 h-4 bg-white rounded opacity-20" />
+            </View>
+          </View>
+        </LinearGradient>
+        
+        {/* Content Skeleton */}
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text className="text-gray-600 mt-4 text-center">Loading leaderboard...</Text>
+        </View>
       </View>
     );
   }
@@ -146,7 +175,7 @@ export default function ExamLeaderboardPage() {
       {/* Header */}
       <LinearGradient
         colors={['#3B82F6', '#1D4ED8']}
-        className="px-6 pt-12 pb-6"
+        style={{ paddingHorizontal: 24, paddingTop: 48, paddingBottom: 24 }}
       >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
@@ -180,34 +209,34 @@ export default function ExamLeaderboardPage() {
         <View className="mx-4 mt-4 mb-6">
           <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <View className="flex-row justify-around">
-              <View className="items-center">
+              <View className="items-center flex-1">
                 <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center mb-2">
-                  <Ionicons name="people" size={24} color="#3B82F6" />
+                  <Ionicons name="people" size={20} color="#3B82F6" />
                 </View>
                 <Text className="text-lg font-bold text-gray-900">
                   {leaderboard.length}
                 </Text>
-                <Text className="text-xs text-gray-500">Participants</Text>
+                <Text className="text-xs text-gray-500 text-center">Participants</Text>
               </View>
               
-              <View className="items-center">
+              <View className="items-center flex-1">
                 <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center mb-2">
-                  <Ionicons name="trophy" size={24} color="#10B981" />
+                  <Ionicons name="trophy" size={20} color="#10B981" />
                 </View>
                 <Text className="text-lg font-bold text-gray-900">
                   {exam.totalMarks}
                 </Text>
-                <Text className="text-xs text-gray-500">Total Marks</Text>
+                <Text className="text-xs text-gray-500 text-center">Total Marks</Text>
               </View>
               
-              <View className="items-center">
+              <View className="items-center flex-1">
                 <View className="w-12 h-12 bg-purple-100 rounded-full items-center justify-center mb-2">
-                  <Ionicons name="time" size={24} color="#8B5CF6" />
+                  <Ionicons name="time" size={20} color="#8B5CF6" />
                 </View>
                 <Text className="text-lg font-bold text-gray-900">
                   {exam.duration}
                 </Text>
-                <Text className="text-xs text-gray-500">Minutes</Text>
+                <Text className="text-xs text-gray-500 text-center">Minutes</Text>
               </View>
             </View>
           </View>
@@ -255,7 +284,7 @@ export default function ExamLeaderboardPage() {
                           }`}>
                             <Ionicons 
                               name={rankIcon.name} 
-                              size={20} 
+                              size={16} 
                               color={rankIcon.color} 
                             />
                           </View>
@@ -269,7 +298,7 @@ export default function ExamLeaderboardPage() {
                       </View>
 
                       {/* User Info */}
-                      <View className="flex-1">
+                      <View className="flex-1 min-w-0">
                         <Text className="text-base font-semibold text-gray-900" numberOfLines={1}>
                           {entry.user.name}
                         </Text>
@@ -279,7 +308,7 @@ export default function ExamLeaderboardPage() {
                       </View>
 
                       {/* Score */}
-                      <View className="items-end">
+                      <View className="items-end ml-2">
                         <Text className="text-lg font-bold text-gray-900">
                           {entry.score}/{entry.totalMarks}
                         </Text>
@@ -298,7 +327,7 @@ export default function ExamLeaderboardPage() {
         {/* Additional Actions */}
         <View className="mx-4 mb-6">
           <TouchableOpacity
-            onPress={() => router.push(`/(drawer)/(tabs)/exams/${id}/submissions` as any)}
+            onPress={() => router.push(`/exams/${id}/submissions` as any)}
             className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex-row items-center justify-between"
           >
             <View className="flex-row items-center">

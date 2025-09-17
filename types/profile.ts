@@ -64,6 +64,7 @@ export interface ProfileData {
   achievements: Achievement[];
   addresses: Address[];
   stats: ProfileStats;
+  preferences?: UserPreferences;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,11 +95,13 @@ export interface ProfileUpdateData {
   batch?: string;
   group?: string;
   addresses?: Address[];
+  preferences?: Partial<UserPreferences>;
 }
 
 export interface UserPreferences {
   language: string;
   timezone: string;
+  theme: 'light' | 'dark' | 'system';
   profileVisibility: 'public' | 'private' | 'connections';
   showEmail: boolean;
   showPhone: boolean;

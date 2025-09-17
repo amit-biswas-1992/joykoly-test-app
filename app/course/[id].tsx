@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Ale
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons, MaterialIcons, AntDesign } from '@expo/vector-icons';
-import { storeService, StoreCourse } from '../../../../services/store.service';
+import { storeService, StoreCourse } from '@/services/store.service';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -48,7 +48,6 @@ export default function CourseDetail() {
                 Alert.alert('Success', 'You have been enrolled in the course!');
                 router.back();
               } catch (error: any) {
-                // Handle specific error cases
                 if (error?.data?.statusCode === 409 || error?.message?.includes('already enrolled')) {
                   Alert.alert(
                     'Already Enrolled',
@@ -58,8 +57,7 @@ export default function CourseDetail() {
                       { 
                         text: 'View My Courses', 
                         onPress: () => {
-                          // Navigate to enrolled courses or dashboard
-                          router.push('/(drawer)/(tabs)/');
+                          router.push('/(tabs)/' as any);
                         }
                       }
                     ]
@@ -130,13 +128,13 @@ export default function CourseDetail() {
         {/* Apple Books Style Layout */}
         <View className="px-6">
           {/* Course Image - Apple Books style */}
-          <View className="items-center mb-6">
-            <View className="w-48 h-60 rounded-2xl overflow-hidden shadow-2xl" style={{
+          <View className="items-center mb-8">
+            <View className="w-52 h-64 rounded-3xl overflow-hidden shadow-2xl" style={{
               shadowColor: '#000',
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.25,
-              shadowRadius: 12,
-              elevation: 10,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+              elevation: 12,
             }}>
               {course.imageUrl ? (
                 <Image
@@ -146,130 +144,162 @@ export default function CourseDetail() {
                 />
               ) : (
                 <View className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center">
-                  <Ionicons name="play" size={48} color="white" />
+                  <Ionicons name="play" size={56} color="white" />
                 </View>
               )}
             </View>
           </View>
 
           {/* Course Title - Apple Books style */}
-          <View className="items-center mb-6">
-            <Text className="text-2xl font-bold text-black text-center leading-tight mb-2">
+          <View className="items-center mb-8">
+            <Text className="text-3xl font-bold text-black text-center leading-tight mb-3">
               {course.title}
             </Text>
-            <Text className="text-base text-gray-600 text-center">
-              {course.instructor}
+            <Text className="text-lg text-gray-600 text-center">
+              by {course.instructor}
             </Text>
           </View>
 
           {/* Course Stats - Apple Books style */}
-          <View className="flex-row items-center justify-center mb-6">
-            <View className="flex-row items-center mr-6">
-              <AntDesign name="star" size={16} color="#F59E0B" />
-              <Text className="text-base font-semibold text-black ml-2">
+          <View className="flex-row items-center justify-center mb-8">
+            <View className="flex-row items-center mr-8">
+              <AntDesign name="star" size={18} color="#F59E0B" />
+              <Text className="text-lg font-semibold text-black ml-2">
                 {course.rating || 4.8}
               </Text>
             </View>
-            <View className="flex-row items-center mr-6">
-              <Ionicons name="people" size={16} color="#6B7280" />
-              <Text className="text-base font-semibold text-black ml-2">
+            <View className="flex-row items-center mr-8">
+              <Ionicons name="people" size={18} color="#6B7280" />
+              <Text className="text-lg font-semibold text-black ml-2">
                 {course.totalStudents || 0}
               </Text>
             </View>
             <View className="flex-row items-center">
-              <Ionicons name="time" size={16} color="#6B7280" />
-              <Text className="text-base font-semibold text-black ml-2">
+              <Ionicons name="time" size={18} color="#6B7280" />
+              <Text className="text-lg font-semibold text-black ml-2">
                 {course.duration}
               </Text>
             </View>
           </View>
 
+          {/* Category Badge */}
+          {course.category && (
+            <View className="items-center mb-8">
+              <View className="bg-blue-100 px-4 py-2 rounded-full">
+                <Text className="text-blue-800 font-semibold text-sm">
+                  {course.category}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Description - Apple Books style */}
-          <View className="mb-6">
-            <Text className="text-base text-gray-700 leading-6 text-center">
+          <View className="mb-8">
+            <Text className="text-lg text-gray-700 leading-7 text-center">
               {course.description}
             </Text>
           </View>
 
-          {/* What You'll Learn - Apple Books style */}
-          <View className="mb-6">
-            <Text className="text-xl font-bold text-black mb-4 text-center">What you'll learn</Text>
-            <View className="space-y-3">
-              {[
-                'Master the fundamentals of the subject',
-                'Build real-world projects and applications',
-                'Get lifetime access to course materials',
-                'Receive certificate of completion',
-                'Access to community and support'
-              ].map((item, index) => (
-                <View key={index} className="flex-row items-start">
-                  <View className="w-2 h-2 bg-blue-600 rounded-full mr-3 mt-2" />
-                  <Text className="text-base text-gray-700 flex-1 leading-6">{item}</Text>
+          {/* Course Details Grid */}
+          <View className="mb-8">
+            <View className="bg-gray-50 rounded-2xl p-6">
+              <View className="flex-row justify-between items-center mb-4">
+                <View className="flex-1">
+                  <Text className="text-sm text-gray-500 mb-1">Level</Text>
+                  <Text className="text-base font-semibold text-gray-900 capitalize">
+                    {course.level}
+                  </Text>
                 </View>
-              ))}
+                <View className="flex-1">
+                  <Text className="text-sm text-gray-500 mb-1">Duration</Text>
+                  <Text className="text-base font-semibold text-gray-900">
+                    {course.duration}
+                  </Text>
+                </View>
+              </View>
+              
+              {course.numberOfClasses && (
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-1">
+                    <Text className="text-sm text-gray-500 mb-1">Classes</Text>
+                    <Text className="text-base font-semibold text-gray-900">
+                      {course.numberOfClasses} classes
+                    </Text>
+                  </View>
+                  {course.batchName && (
+                    <View className="flex-1">
+                      <Text className="text-sm text-gray-500 mb-1">Batch</Text>
+                      <Text className="text-base font-semibold text-gray-900">
+                        {course.batchName}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
           </View>
 
-          {/* Course Content - Apple Books style */}
-          <View className="mb-6">
-            <Text className="text-xl font-bold text-black mb-4 text-center">Course Content</Text>
-            <View className="space-y-2">
-              <View className="flex-row items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <View className="flex-row items-center">
-                  <Ionicons name="play-circle" size={20} color="#007AFF" />
-                  <Text className="text-base text-black ml-3">Introduction to the Course</Text>
+          {/* Price Information */}
+          <View className="mb-8">
+            <View className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-sm text-gray-600 mb-1">Course Price</Text>
+                  {course.originalPrice && course.originalPrice > course.price ? (
+                    <View className="flex-row items-center">
+                      <Text className="text-lg text-gray-400 line-through mr-2">
+                        ৳{course.originalPrice}
+                      </Text>
+                      <Text className="text-2xl font-bold text-green-600">
+                        {course.price === 0 ? 'Free' : `৳${course.price}`}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text className="text-2xl font-bold text-gray-900">
+                      {course.price === 0 ? 'Free' : `৳${course.price}`}
+                    </Text>
+                  )}
                 </View>
-                <Text className="text-gray-600 text-base">15 min</Text>
-              </View>
-              <View className="flex-row items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <View className="flex-row items-center">
-                  <Ionicons name="play-circle" size={20} color="#007AFF" />
-                  <Text className="text-base text-black ml-3">Core Concepts</Text>
+                <View className="items-center">
+                  <Ionicons name="shield-checkmark" size={24} color="#10B981" />
+                  <Text className="text-xs text-green-600 font-medium mt-1">
+                    Secure Payment
+                  </Text>
                 </View>
-                <Text className="text-gray-600 text-base">45 min</Text>
-              </View>
-              <View className="flex-row items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <View className="flex-row items-center">
-                  <Ionicons name="play-circle" size={20} color="#007AFF" />
-                  <Text className="text-base text-black ml-3">Practical Applications</Text>
-                </View>
-                <Text className="text-gray-600 text-base">60 min</Text>
-              </View>
-              <View className="flex-row items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <View className="flex-row items-center">
-                  <Ionicons name="play-circle" size={20} color="#007AFF" />
-                  <Text className="text-base text-black ml-3">Final Project</Text>
-                </View>
-                <Text className="text-gray-600 text-base">30 min</Text>
               </View>
             </View>
           </View>
 
           {/* Bottom spacing for floating button */}
-          <View className="h-24" />
+          <View className="h-32" />
         </View>
       </ScrollView>
 
       {/* Floating Enroll Button - Apple Books style */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+      <View className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-4">
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-2xl font-bold text-black">
               {course.price === 0 ? 'Free' : `৳${course.price}`}
             </Text>
+            {course.originalPrice && course.originalPrice > course.price && (
+              <Text className="text-sm text-gray-500 line-through">
+                ৳{course.originalPrice}
+              </Text>
+            )}
           </View>
           <TouchableOpacity
             onPress={handleEnroll}
-            className="bg-blue-600 px-6 py-3 rounded-2xl flex-row items-center"
+            className="bg-blue-600 px-8 py-4 rounded-2xl flex-row items-center"
             style={{
               shadowColor: '#007AFF',
-              shadowOffset: { width: 0, height: 4 },
+              shadowOffset: { width: 0, height: 6 },
               shadowOpacity: 0.3,
-              shadowRadius: 8,
+              shadowRadius: 12,
               elevation: 8,
             }}
           >
-            <MaterialIcons name="shopping-cart" size={20} color="white" />
+            <MaterialIcons name="shopping-cart" size={22} color="white" />
             <Text className="text-white font-bold text-lg ml-2">
               {course.price === 0 ? 'Enroll Free' : 'Enroll Now'}
             </Text>
