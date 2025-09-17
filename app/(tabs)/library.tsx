@@ -152,6 +152,7 @@ export default function Library({ selectedCourse = 'all' }: LibraryProps) {
     setActiveTab(tab as 'all' | 'live' | 'upcoming' | 'completed');
   };
 
+
   const filteredItems = libraryItems.filter(item => {
     switch (activeTab) {
       case 'live':
@@ -240,6 +241,7 @@ export default function Library({ selectedCourse = 'all' }: LibraryProps) {
               <Ionicons name="search" size={20} color="#6B7280" />
             </TouchableOpacity>
           </View>
+          
           
           {/* Quick stats */}
           <View className="flex-row">
@@ -348,7 +350,7 @@ export default function Library({ selectedCourse = 'all' }: LibraryProps) {
               </Text>
               <TouchableOpacity 
                 className="mt-4 bg-blue-500 px-6 py-3 rounded-full"
-                onPress={() => router.push('/(tabs)/store')}
+                onPress={() => router.push('/(tabs)/course')}
               >
                 <Text className="text-white font-semibold">Browse Courses</Text>
               </TouchableOpacity>

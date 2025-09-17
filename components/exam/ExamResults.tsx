@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { router } from 'expo-router';
 
 interface ExamResultsProps {
   results: {
@@ -13,6 +14,7 @@ interface ExamResultsProps {
     rank?: number;
     totalParticipants?: number;
   };
+  examId?: string;
   onRetake?: () => void;
   onViewAnswers?: () => void;
   onGoHome: () => void;
@@ -20,6 +22,7 @@ interface ExamResultsProps {
 
 export const ExamResults: React.FC<ExamResultsProps> = ({
   results,
+  examId,
   onRetake,
   onViewAnswers,
   onGoHome,
@@ -28,6 +31,12 @@ export const ExamResults: React.FC<ExamResultsProps> = ({
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}m ${remainingSeconds}s`;
+  };
+
+  const handleStartPractice = () => {
+    if (examId) {
+      router.push(`/exams/${examId}/offline` as any);
+    }
   };
 
   return (
@@ -144,6 +153,12 @@ export const ExamResults: React.FC<ExamResultsProps> = ({
           <TouchableOpacity onPress={onGoHome} className="rounded-lg bg-blue-500 py-4">
             <Text className="text-center text-lg font-semibold text-white">Go to Dashboard</Text>
           </TouchableOpacity>
+
+          {examId && (
+            <TouchableOpacity onPress={handleStartPractice} className="rounded-lg bg-purple-500 py-4">
+              <Text className="text-center text-lg font-semibold text-white">Start Practice Exam</Text>
+            </TouchableOpacity>
+          )}
 
           {onViewAnswers && (
             <TouchableOpacity onPress={onViewAnswers} className="rounded-lg bg-gray-200 py-4">

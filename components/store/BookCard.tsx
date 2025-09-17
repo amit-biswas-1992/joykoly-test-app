@@ -1,7 +1,31 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, Platform } from 'react-native';
-import { Ionicons, AntDesign } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Book } from '@/services/book.service';
+
+// Generate a consistent color based on book ID
+const getBookBackgroundColor = (bookId: string) => {
+  const colors = [
+    '#3B82F6', // Blue
+    '#8B5CF6', // Purple
+    '#10B981', // Green
+    '#F59E0B', // Orange
+    '#EC4899', // Pink
+    '#6366F1', // Indigo
+    '#EF4444', // Red
+    '#14B8A6', // Teal
+    '#EAB308', // Yellow
+    '#06B6D4', // Cyan
+  ];
+  
+  // Use book ID to consistently pick a color
+  const hash = bookId.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  return colors[Math.abs(hash) % colors.length];
+};
 
 interface BookCardProps {
   book: Book;
@@ -15,166 +39,70 @@ export const BookCard: React.FC<BookCardProps> = ({
   onPress 
 }) => {
   if (isFeatured) {
-    // Featured book card with Apple Books horizontal style
+    // Featured book card - horizontal scroll style
+    const bookBgColor = getBookBackgroundColor(book.id);
+    
     return (
-      <View className="mr-4 w-72">
+      <View className="flex-1 flex-col gap-4 rounded-lg min-w-40 p-3 bg-white shadow-md border border-gray-200">
         <TouchableOpacity
           onPress={() => onPress(book)}
-          className="bg-white rounded-2xl overflow-hidden"
-          style={{
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.12,
-            shadowRadius: 16,
-            elevation: 8,
-          }}
+          className="w-full aspect-[3/4] rounded-lg shadow-md p-3"
+          style={{ backgroundColor: bookBgColor }}
         >
-          <View className="flex-row">
-            {/* Book Cover */}
-            <View className="w-28 h-36">
-              {book.coverImageUrl ? (
-                <Image
-                  source={{ uri: book.coverImageUrl }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="w-full h-full bg-gradient-to-br from-green-500 to-blue-600 items-center justify-center">
-                  <Ionicons name="book" size={32} color="white" />
-                </View>
-              )}
+          {book.coverImageUrl ? (
+            <View className="w-full h-full rounded-lg overflow-hidden">
+              <Image
+                source={{ uri: book.coverImageUrl }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
             </View>
-            
-            {/* Book Info */}
-            <View className="flex-1 p-4">
-              <View className="flex-row items-center justify-between mb-2">
-                <View className="bg-orange-500 px-2 py-1 rounded-full">
-                  <Text className="text-white text-xs font-semibold">Featured</Text>
-                </View>
-                <TouchableOpacity className="p-1">
-                  <AntDesign name="heart" size={14} color="#6B7280" />
-                </TouchableOpacity>
-              </View>
-              
-              <Text className="text-base font-bold text-gray-900 mb-1" numberOfLines={2}>
-                {book.title}
-              </Text>
-              <Text className="text-sm text-gray-600 mb-2" numberOfLines={1}>
-                {book.author}
-              </Text>
-              
-              <View className="flex-row items-center mb-2">
-                <AntDesign name="star" size={12} color="#F59E0B" />
-                <Text className="text-xs font-medium text-gray-700 ml-1">
-                  {book.rating || 4.8}
-                </Text>
-                <Text className="text-xs text-gray-500 ml-1">({book.totalReviews || 0})</Text>
-              </View>
-              
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center">
-                  {book.price > book.discountPrice ? (
-                    <>
-                      <Text className="text-xs text-gray-400 line-through mr-1">
-                        ৳{book.price}
-                      </Text>
-                      <Text className="text-sm font-bold text-green-600">
-                        {book.discountPrice === 0 ? 'Free' : `৳${book.discountPrice}`}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text className="text-sm font-bold text-gray-900">
-                      {book.discountPrice === 0 ? 'Free' : `৳${book.discountPrice}`}
-                    </Text>
-                  )}
-                </View>
-              </View>
+          ) : (
+            <View className="w-full h-full items-center justify-center rounded-lg">
+              <Ionicons name="book" size={32} color="white" />
             </View>
-          </View>
+          )}
         </TouchableOpacity>
+        <View className="px-1">
+          <Text className="text-[#0d141b] text-base font-medium leading-normal" numberOfLines={2}>
+            {book.title}
+          </Text>
+         
+        </View>
       </View>
     );
   }
 
-  // Regular book card with Apple Books grid style
+  // Regular book card - grid style with 3:4 aspect ratio
+  const bookBgColor = getBookBackgroundColor(book.id);
+  
   return (
-    <View className="mb-4">
+    <View className="flex-1 flex-col gap-4 rounded-lg min-w-40 p-3 bg-white shadow-md border border-gray-200">
       <TouchableOpacity
         onPress={() => onPress(book)}
-        className="bg-white rounded-xl overflow-hidden"
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 4,
-        }}
+        className="w-full aspect-[3/4] rounded-lg shadow-md p-3"
+        style={{ backgroundColor: bookBgColor }}
       >
-        {/* Book Cover - 3:4 aspect ratio */}
-        <View className="relative" style={{ aspectRatio: 3/4 }}>
-          {book.coverImageUrl ? (
+        {book.coverImageUrl ? (
+          <View className="w-full h-full rounded-lg overflow-hidden">
             <Image
               source={{ uri: book.coverImageUrl }}
               className="w-full h-full"
               resizeMode="cover"
             />
-          ) : (
-            <View className="w-full h-full bg-gradient-to-br from-green-500 to-blue-600 items-center justify-center">
-              <Ionicons name="book" size={32} color="white" />
-            </View>
-          )}
-          
-          {/* Heart icon */}
-          <View className="absolute top-3 right-3">
-            <TouchableOpacity className="bg-white/90 p-1.5 rounded-full">
-              <AntDesign name="heart" size={14} color="#6B7280" />
-            </TouchableOpacity>
           </View>
-        </View>
-        
-        {/* Book Content */}
-        <View className="p-3">
-          <Text className="text-sm font-semibold text-gray-900 mb-1" numberOfLines={2}>
-            {book.title}
-          </Text>
-          
-          <Text className="text-xs text-gray-600 mb-2" numberOfLines={1}>
-            {book.author}
-          </Text>
-          
-          {/* Rating and pages */}
-          <View className="flex-row items-center justify-between mb-2">
-            <View className="flex-row items-center">
-              <AntDesign name="star" size={12} color="#F59E0B" />
-              <Text className="text-xs font-medium text-gray-700 ml-1">
-                {book.rating || 4.8}
-              </Text>
-              <Text className="text-xs text-gray-500 ml-1">({book.totalReviews || 0})</Text>
-            </View>
-            <Text className="text-xs text-gray-500">{book.pages} pages</Text>
+        ) : (
+          <View className="w-full h-full items-center justify-center rounded-lg">
+            <Ionicons name="book" size={32} color="white" />
           </View>
-          
-          {/* Price */}
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
-              {book.price > book.discountPrice ? (
-                <>
-                  <Text className="text-xs text-gray-400 line-through mr-1">
-                    ৳{book.price}
-                  </Text>
-                  <Text className="text-base font-bold text-green-600">
-                    {book.discountPrice === 0 ? 'Free' : `৳${book.discountPrice}`}
-                  </Text>
-                </>
-              ) : (
-                <Text className="text-base font-bold text-gray-900">
-                  {book.discountPrice === 0 ? 'Free' : `৳${book.discountPrice}`}
-                </Text>
-              )}
-            </View>
-          </View>
-        </View>
+        )}
       </TouchableOpacity>
+      <View className="px-1">
+        <Text className="text-[#0d141b] text-base font-medium leading-normal" numberOfLines={2}>
+          {book.title}
+        </Text>
+        
+      </View>
     </View>
   );
 };

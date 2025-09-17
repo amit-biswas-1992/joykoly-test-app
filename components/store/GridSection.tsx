@@ -16,9 +16,9 @@ export const GridSection: React.FC<GridSectionProps> = ({
   showFilter = true 
 }) => {
   return (
-    <View className="px-6 pb-8">
+    <View className="px-4 pb-8">
       <View className="flex-row items-center justify-between mb-6">
-        <Text className="text-3xl font-bold text-black">
+        <Text className="text-[#0d141b] text-[22px] font-bold leading-tight tracking-[-0.015em]">
           {title}
         </Text>
         {showFilter && onFilterPress && (

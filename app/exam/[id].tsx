@@ -22,7 +22,7 @@ export default function ExamScreen() {
   };
 
   const handleGoHome = () => {
-    router.push('/(drawer)/(tabs)/');
+    router.back();
   };
 
   const handleRetake = () => {
@@ -38,6 +38,7 @@ export default function ExamScreen() {
     return (
       <ExamResults
         results={examResults}
+        examId={id}
         onRetake={handleRetake}
         onViewAnswers={handleViewAnswers}
         onGoHome={handleGoHome}

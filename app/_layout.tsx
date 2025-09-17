@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
@@ -40,26 +41,28 @@ export default function RootLayout() {
       {/* WRAP YOUR APP WITH ANY ADDITIONAL PROVIDERS HERE */}
       {/* <ExampleProvider> */}
 
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <BottomSheetModalProvider>
-          <ActionSheetProvider>
-            <NavThemeProvider value={NAV_THEME[colorScheme]}>
-              <Stack screenOptions={SCREEN_OPTIONS}>
-                <Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
-                <Stack.Screen name="modal" options={MODAL_OPTIONS} />
-                <Stack.Screen name="course/[id]" options={{ headerShown: false }} />
-                <Stack.Screen name="courses" options={{ headerShown: false }} />
-                <Stack.Screen name="exam/[id]" options={{ headerShown: false }} />
-                <Stack.Screen name="exams" options={{ headerShown: false }} />
-                <Stack.Screen name="exams/[id]/leaderboard" options={{ headerShown: false }} />
-                <Stack.Screen name="exams/[id]/submissions" options={{ headerShown: false }} />
-                <Stack.Screen name="profile" options={{ headerShown: false }} />
-                <Stack.Screen name="profile-settings" options={{ headerShown: false }} />
-              </Stack>
-            </NavThemeProvider>
-          </ActionSheetProvider>
-        </BottomSheetModalProvider>
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <BottomSheetModalProvider>
+            <ActionSheetProvider>
+              <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                <Stack screenOptions={SCREEN_OPTIONS}>
+                  <Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
+                  <Stack.Screen name="modal" options={MODAL_OPTIONS} />
+                  <Stack.Screen name="course/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen name="courses" options={{ headerShown: false }} />
+                  <Stack.Screen name="exam/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen name="exams" options={{ headerShown: false }} />
+                  <Stack.Screen name="exams/[id]/leaderboard" options={{ headerShown: false }} />
+                  <Stack.Screen name="exams/[id]/submissions" options={{ headerShown: false }} />
+                  <Stack.Screen name="profile" options={{ headerShown: false }} />
+                  <Stack.Screen name="profile-settings" options={{ headerShown: false }} />
+                </Stack>
+              </NavThemeProvider>
+            </ActionSheetProvider>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
 
       {/* </ExampleProvider> */}
     </>

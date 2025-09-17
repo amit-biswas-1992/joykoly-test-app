@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, Dimensions, Animated, Easing } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Modal, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { EXAM_TYPE_COLORS, EXAM_TYPE_ICONS, ExamType } from './constants';
@@ -46,58 +46,7 @@ const formatExamTime = (item: LibraryItem) => {
 }
 
 const ExamModal: React.FC<ExamModalProps> = ({ visible, selectedItem, onClose }) => {
-  const slideAnim = useRef(new Animated.Value(screenHeight)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const [isClosePressed, setIsClosePressed] = useState(false);
-
-  useEffect(() => {
-    if (visible) {
-      // Animate in with smooth easing
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 350,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 350,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Animate out with faster, smoother easing
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: screenHeight,
-          duration: 280,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 0,
-          duration: 280,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 0.95,
-          duration: 280,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible, slideAnim, backdropAnim, scaleAnim]);
 
   if (!selectedItem) return null;
 
@@ -116,33 +65,25 @@ const ExamModal: React.FC<ExamModalProps> = ({ visible, selectedItem, onClose })
     router.push(`/exams/${selectedItem.id}/leaderboard` as any);
   };
 
+  const handleStartPractice = () => {
+    onClose();
+    router.push(`/exams/${selectedItem.id}/offline` as any);
+  };
+
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="none"
+      animationType="slide"
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Animated.View 
-        className="flex-1 justify-end"
-        style={{ 
-          backgroundColor: backdropAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.5)'],
-          })
-        }}
-      >
-        <Animated.View 
+      <View className="flex-1 justify-end bg-black/50">
+        <View 
           className="bg-white rounded-t-3xl"
           style={{ 
             minHeight: screenHeight * 0.7,
             maxHeight: screenHeight * 0.9,
-            zIndex: 1000,
-            transform: [
-              { translateY: slideAnim },
-              { scale: scaleAnim }
-            ]
           }}
         >
           <View className="flex-1 px-6 pt-4">
@@ -301,9 +242,20 @@ const ExamModal: React.FC<ExamModalProps> = ({ visible, selectedItem, onClose })
                   <Ionicons name="analytics" size={20} color="white" />
                   <Text className="text-white font-semibold text-lg ml-2">View Results</Text>
                 </TouchableOpacity>
+                
+                <TouchableOpacity
+                  onPress={handleStartPractice}
+                  className="bg-purple-500 rounded-2xl py-4 px-6 flex-row items-center justify-center shadow-lg"
+                  style={{ marginBottom: 16 }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="book" size={20} color="white" />
+                  <Text className="text-white font-semibold text-lg ml-2">Start Practice Exam</Text>
+                </TouchableOpacity>
+                
                 <TouchableOpacity
                   onPress={handleViewLeaderboard}
-                  className="bg-purple-500 rounded-2xl py-4 px-6 flex-row items-center justify-center shadow-lg"
+                  className="bg-blue-500 rounded-2xl py-4 px-6 flex-row items-center justify-center shadow-lg"
                   activeOpacity={0.8}
                 >
                   <Ionicons name="trophy" size={20} color="white" />
@@ -314,8 +266,8 @@ const ExamModal: React.FC<ExamModalProps> = ({ visible, selectedItem, onClose })
           </View>
           </ScrollView>
           </View>
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 };

@@ -15,7 +15,7 @@ module.exports = {
         background: withOpacity('background'),
         foreground: withOpacity('foreground'),
         primary: {
-          DEFAULT: withOpacity('primary'),
+          DEFAULT: '#1173d4',
           foreground: withOpacity('primary-foreground'),
         },
         secondary: {
@@ -42,6 +42,8 @@ module.exports = {
           DEFAULT: withOpacity('card'),
           foreground: withOpacity('card-foreground'),
         },
+        'background-light': '#f6f7f8',
+        'background-dark': '#101922',
       },
       borderWidth: {
         hairline: hairlineWidth(),

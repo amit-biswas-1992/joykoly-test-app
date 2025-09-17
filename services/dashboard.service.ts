@@ -123,7 +123,57 @@ export const getDashboardData = async (): Promise<DashboardData> => {
 export const getEnrolledCourses = async (): Promise<Course[]> => {
   try {
     const response = await coursesService.getEnrolled();
-    return extractArrayFromResponse(response, 'courses');
+    const courses = extractArrayFromResponse(response, 'courses');
+    
+    // If no courses returned, add some mock data for demonstration
+    if (courses.length === 0) {
+      return [
+        {
+          id: '1',
+          title: 'Advanced Data Science',
+          description: 'Learn advanced data science techniques',
+          instructor: 'Dr. Evelyn Reed',
+          duration: 40,
+          level: 'Advanced',
+          price: 99,
+          enrolled: true,
+          progress: 30,
+          rating: 4.8,
+          totalStudents: 1250,
+          imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCXOJD5U_1nTHGh5AhwPWSyGwHFngmiYd-KJWhq1lqPRPDJXsqZO_9Blpg_QHMYMqoRQOc5Hr0LnoVsfPQgLVSUiFaJRIcRq1Km2WNs8X4Hb-y1XjxBK7OsfakRRvpakiHBk6GGEwSgamYMRZGP2RefWoqfaEkgl2ZLoXGMRz54Uum0leKQBSaO9aGOrNOAUW8F8iEPQLqotohHCc5rEB1IjSAGwKgwtcTUw8ILDCxvENDGwHHCARNkLPtjlZTnScY2JFg31WpfgIn_'
+        },
+        {
+          id: '2',
+          title: 'Machine Learning Fundamentals',
+          description: 'Introduction to machine learning concepts',
+          instructor: 'Prof. Samuel Harper',
+          duration: 25,
+          level: 'Beginner',
+          price: 79,
+          enrolled: true,
+          progress: 20,
+          rating: 4.6,
+          totalStudents: 890,
+          imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCr3TzhJpxdvojvSGgly9sbToKy6gdoxmOPo4trgioIkGEZ2qE0J_3KIFDyGxJwiq11xY1iMV9f650z7xVS5Fu3j-ScS_Ks5iKLLa4JyEEZF8IvGj5VqVnldtXKp0kcAsixzcmEEwMy7m-z1ncEM19JzIGrI9MmksZD45pN_OjzatxGxh0YYnT9bkSjzuDhh6EqmVsn3wjHyi25UwV3wPodny9EosxCOCc1KkQv4eEo9PL8F8JrfJQVSDbneHgUJ3Z_aMqELwk3bZaV'
+        },
+        {
+          id: '3',
+          title: 'Introduction to Python',
+          description: 'Learn Python programming from scratch',
+          instructor: 'Dr. Olivia Bennett',
+          duration: 30,
+          level: 'Beginner',
+          price: 59,
+          enrolled: true,
+          progress: 100,
+          rating: 4.9,
+          totalStudents: 2100,
+          imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCiCrJUclbUDeGaEx5gzUcM7U3YLHxfet4JUg8HB_RKa_pbcrny3XZVGo1OGycXwqmAjMk17CGaiFMZ5_FJKxEdTQEWSqDc8jsR9cpgPAUrZ4KGLYtJXGkc7j_KfqHAQgjaAHfnmoqpmQkvbhzDwOtdRlH8_7XMevBpgMXAN9FU-vnI4Sj9ylhSWpWxT_qBrtW69sldkYBywogGpXxRt19L6c7N-_gxJFxMa_MAiKoK1phFmrVthUnCfSmplqfqkIlj22LVA-OZrJZB'
+        }
+      ];
+    }
+    
+    return courses;
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
     return [];
