@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ExamQuestion, Question } from './ExamQuestion';
 import { examsService } from '../../services/exams.service';
 
@@ -123,20 +124,20 @@ export const ExamView: React.FC<ExamViewProps> = ({ examId, onComplete, onExit }
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-50">
         <Text className="text-lg text-gray-600">Loading exam...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (questions.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-50">
         <Text className="text-lg text-gray-600">No questions available</Text>
         <TouchableOpacity onPress={onExit} className="mt-4 rounded-lg bg-blue-500 px-6 py-2">
           <Text className="font-medium text-white">Go Back</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -145,7 +146,7 @@ export const ExamView: React.FC<ExamViewProps> = ({ examId, onComplete, onExit }
   const progress = (answeredQuestions / questions.length) * 100;
 
   return (
-    <View className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center justify-between bg-blue-600 px-4 py-3">
         <TouchableOpacity onPress={handleExit}>
@@ -205,6 +206,6 @@ export const ExamView: React.FC<ExamViewProps> = ({ examId, onComplete, onExit }
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };

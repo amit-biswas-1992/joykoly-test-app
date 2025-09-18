@@ -57,7 +57,7 @@ const ExamModal: React.FC<ExamModalProps> = ({ visible, selectedItem, onClose })
 
   const handleViewResults = () => {
     onClose();
-    router.push(`/exams/${selectedItem.id}/results` as any);
+    router.push(`/exams/${selectedItem.id}/submissions` as any);
   };
 
   const handleViewLeaderboard = () => {
@@ -67,7 +67,7 @@ const ExamModal: React.FC<ExamModalProps> = ({ visible, selectedItem, onClose })
 
   const handleStartPractice = () => {
     onClose();
-    router.push(`/exams/${selectedItem.id}/offline` as any);
+    router.push(`/exam/${selectedItem.id}?mode=practice` as any);
   };
 
   return (

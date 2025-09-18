@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
 interface ExamResultsProps {
@@ -40,7 +41,8 @@ export const ExamResults: React.FC<ExamResultsProps> = ({
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1">
       <View className="p-4">
         {/* Header */}
         <View className="mb-4 rounded-lg bg-white p-6 shadow-sm">
@@ -173,6 +175,7 @@ export const ExamResults: React.FC<ExamResultsProps> = ({
           )}
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };

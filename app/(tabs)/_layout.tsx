@@ -15,10 +15,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#CBD5E1',
         tabBarStyle: {
           position: 'absolute',
-          bottom: -3,
+          bottom: insets.bottom,
           right: 16,
           left: 16,
-          elevation: 0,
           height: Platform.OS === 'ios' ? 60 + insets.bottom : 60 + insets.bottom,
           backgroundColor: '#FFFFFF',
           borderTopWidth: 0,
