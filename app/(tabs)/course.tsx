@@ -6,12 +6,11 @@ import { router } from 'expo-router';
 import { storeService, StoreCourse } from '@/services/store.service';
 import { 
   StoreHeader, 
-  FilterTabs, 
-  CourseCard, 
   FeaturedSection, 
   GridSection,
   LoadingState
 } from '~/components/store';
+import { StoreCourseCard } from '~/components/store/StoreCourseCard';
 
 export default function CourseScreen() {
   const [featuredCourses, setFeaturedCourses] = useState<StoreCourse[]>([]);
@@ -75,24 +74,35 @@ export default function CourseScreen() {
           onFilterPress={handleFilterPress}
         />
 
-        {/* Filter Tabs */}
+        {/* Category Tabs */}
         <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'featured' && styles.activeTab]}
-            onPress={() => setActiveTab('featured')}
-          >
-            <Text style={[styles.tabText, activeTab === 'featured' && styles.activeTabText]}>
-              Featured ({featuredCourses.length})
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'all' && styles.activeTab]}
-            onPress={() => setActiveTab('all')}
-          >
-            <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>
-              All Courses ({allCourses.length})
-            </Text>
-          </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScrollContent}>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'featured' && styles.activeTab]}
+              onPress={() => setActiveTab('featured')}
+            >
+              <Text style={[styles.tabText, activeTab === 'featured' && styles.activeTabText]}>
+                Featured
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'all' && styles.activeTab]}
+              onPress={() => setActiveTab('all')}
+            >
+              <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>
+                All Courses
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tab}>
+              <Text style={styles.tabText}>Admission</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tab}>
+              <Text style={styles.tabText}>HSC</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tab}>
+              <Text style={styles.tabText}>Free</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
         {/* Content based on active tab */}
@@ -106,10 +116,38 @@ export default function CourseScreen() {
                 onSeeAllPress={handleSeeAllCourses}
               >
                 {featuredCourses.map((course) => (
-                  <CourseCard 
+                  <StoreCourseCard 
                     key={course.id} 
                     course={course} 
                     isFeatured 
+                    onPress={handleCoursePress}
+                  />
+                ))}
+              </FeaturedSection>
+            )}
+
+            {/* Popular Categories */}
+            <View className="px-3 mb-4">
+              <Text className="text-base font-bold text-gray-900 mb-3">Popular Categories</Text>
+              <View className="flex-row flex-wrap gap-2">
+                {['Medical', 'Engineering', 'University', 'Nursing', 'GST'].map((category) => (
+                  <TouchableOpacity key={category} className="bg-blue-50 px-3 py-1.5 rounded-full">
+                    <Text className="text-blue-700 font-medium text-xs">{category}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Recently Added */}
+            {allCourses.length > 0 && (
+              <FeaturedSection 
+                title="Recently Added" 
+                count={allCourses.slice(0, 3).length}
+              >
+                {allCourses.slice(0, 3).map((course) => (
+                  <StoreCourseCard 
+                    key={course.id} 
+                    course={course} 
                     onPress={handleCoursePress}
                   />
                 ))}
@@ -120,12 +158,13 @@ export default function CourseScreen() {
           /* All Courses */
           <GridSection 
             title="All Courses"
+            count={allCourses.length}
             onFilterPress={handleFilterPress}
           >
             {allCourses.length > 0 ? (
               allCourses.map((course) => (
                 <View key={course.id} style={styles.courseItem}>
-                  <CourseCard 
+                  <StoreCourseCard 
                     course={course} 
                     onPress={handleCoursePress}
                   />
@@ -133,7 +172,9 @@ export default function CourseScreen() {
               ))
             ) : (
               <View style={styles.emptyState}>
+                <Ionicons name="book-outline" size={32} color="#9CA3AF" />
                 <Text style={styles.emptyText}>No courses available</Text>
+                <Text style={styles.emptySubText}>Check back later for new courses</Text>
               </View>
             )}
           </GridSection>
@@ -152,36 +193,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#E5E7EB',
+    paddingVertical: 8,
+  },
+  tabScrollContent: {
+    paddingHorizontal: 12,
+    gap: 6,
   },
   tab: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginHorizontal: 4,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
+    minWidth: 70,
   },
   activeTab: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#2563EB',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: '#6B7280',
   },
   activeTabText: {
     color: '#FFFFFF',
   },
   courseItem: {
     width: '48%',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   emptyState: {
     paddingVertical: 32,
@@ -190,7 +232,15 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: '#64748B',
+    color: '#374151',
     fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+  },
+  emptySubText: {
+    textAlign: 'center',
+    color: '#6B7280',
+    fontSize: 12,
+    marginTop: 4,
   },
 });

@@ -7,28 +7,38 @@ interface GridSectionProps {
   children: React.ReactNode;
   onFilterPress?: () => void;
   showFilter?: boolean;
+  count?: number;
 }
 
 export const GridSection: React.FC<GridSectionProps> = ({ 
   title, 
   children, 
   onFilterPress,
-  showFilter = true 
+  showFilter = true,
+  count
 }) => {
   return (
-    <View className="px-4 pb-8">
-      <View className="flex-row items-center justify-between mb-6">
-        <Text className="text-[#0d141b] text-[22px] font-bold leading-tight tracking-[-0.015em]">
-          {title}
-        </Text>
+    <View className="px-3 pb-6">
+      {/* Section Header */}
+      <View className="flex-row items-center justify-between mb-4">
+        <View>
+          <Text className="text-base font-bold text-gray-900 mb-0.5">{title}</Text>
+          {count !== undefined && (
+            <Text className="text-xs text-gray-500">{count} courses</Text>
+          )}
+        </View>
         {showFilter && onFilterPress && (
-          <TouchableOpacity className="flex-row items-center" onPress={onFilterPress}>
-            <Text className="text-blue-600 font-semibold mr-2 text-lg">Filter</Text>
-            <Ionicons name="filter" size={18} color="#2563EB" />
+          <TouchableOpacity 
+            className="flex-row items-center bg-gray-100 px-2 py-1.5 rounded-lg"
+            onPress={onFilterPress}
+          >
+            <Ionicons name="filter" size={12} color="#6B7280" />
+            <Text className="text-gray-700 font-medium ml-1.5 text-xs">Filter</Text>
           </TouchableOpacity>
         )}
       </View>
       
+      {/* Grid Layout */}
       <View className="flex-row flex-wrap justify-between">
         {children}
       </View>

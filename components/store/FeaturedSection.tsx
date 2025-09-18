@@ -16,17 +16,30 @@ export const FeaturedSection: React.FC<FeaturedSectionProps> = ({
   onSeeAllPress 
 }) => {
   return (
-    <View>
-      <Text className="text-[#0d141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-        {title}
-      </Text>
+    <View className="mb-4">
+      {/* Section Header */}
+      <View className="flex-row items-center justify-between px-3 mb-3">
+        <View>
+          <Text className="text-base font-bold text-gray-900 mb-0.5">{title}</Text>
+          <Text className="text-xs text-gray-500">{count} courses</Text>
+        </View>
+        {onSeeAllPress && (
+          <TouchableOpacity 
+            className="flex-row items-center bg-blue-50 px-2 py-1.5 rounded-lg"
+            onPress={onSeeAllPress}
+          >
+            <Text className="text-blue-600 font-medium mr-1 text-xs">See All</Text>
+            <Ionicons name="arrow-forward" size={12} color="#2563EB" />
+          </TouchableOpacity>
+        )}
+      </View>
+      
+      {/* Horizontal Scroll */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="flex overflow-y-auto"
         contentContainerStyle={{ 
-          paddingHorizontal: 16,
-          paddingVertical: 16,
+          paddingHorizontal: 12,
           gap: 12
         }}
       >
