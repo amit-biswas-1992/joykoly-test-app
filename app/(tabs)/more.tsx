@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '~/components/nativewindui/Button';
@@ -73,7 +74,7 @@ export default function MoreScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>More Options</Text>
@@ -114,7 +115,7 @@ export default function MoreScreen() {
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
